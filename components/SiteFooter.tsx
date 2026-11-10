@@ -42,6 +42,9 @@ export default function SiteFooter() {
                 <li><Link className="transition hover:text-brand-700" href="/verify">Certificate verify</Link></li>
                 <li><Link className="transition hover:text-brand-700" href="/student">Student dashboard</Link></li>
                 <li><Link className="transition hover:text-brand-700" href="/admin">Admin panel</Link></li>
+                <li><Link className="transition hover:text-brand-700" href="/parent">Parent portal</Link></li>
+                <li><Link className="transition hover:text-brand-700" href="/faculty">Faculty portal</Link></li>
+                <li><Link className="transition hover:text-brand-700" href="/academics">Academics (HOD)</Link></li>
               </ul>
             </div>
           </div>

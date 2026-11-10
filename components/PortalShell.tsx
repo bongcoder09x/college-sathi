@@ -15,19 +15,24 @@ export default function PortalShell({
   groups,
   children,
   footer,
+  person,
 }: {
   title: string;
   subtitle?: string;
   groups: NavGroup[];
   children: React.ReactNode;
   footer?: React.ReactNode;
+  person?: { name: string; sub: string };
 }) {
   const pathname = usePathname() || "";
   const { session } = useSession();
   const [open, setOpen] = useState(false);
 
-  const active = (href: string) =>
-    href === "/student" || href === "/admin" ? pathname === href : pathname.startsWith(href.split("?")[0]);
+  const active = (href: string) => {
+    const clean = href.split("?")[0].replace(/\/$/, "");
+    const depth = clean.split("/").filter(Boolean).length;
+    return depth <= 1 ? pathname.replace(/\/$/, "") === clean : pathname.startsWith(clean);
+  };
 
   return (
     <div className="shell py-8">
@@ -37,12 +42,12 @@ export default function PortalShell({
           <div className="card overflow-hidden p-4">
             <div className="flex items-center gap-3">
               <span className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-brand-500 to-brand-800 font-display text-lg text-ivory ring-1 ring-accent-500/40">
-                {student.name.charAt(0)}
+                {(person?.name || student.name).charAt(0)}
               </span>
               <div className="min-w-0">
-                <p className="truncate text-[13.5px] font-semibold text-ink">{session?.name || student.name}</p>
+                <p className="truncate text-[13.5px] font-semibold text-ink">{session?.name || person?.name || student.name}</p>
                 <p className="truncate text-[11px] uppercase tracking-[0.12em] text-slate-400">
-                  {session?.role || "Student"} · {student.rollNo}
+                  {person?.sub || `${session?.role || "Student"} · ${student.rollNo}`}
                 </p>
               </div>
             </div>
@@ -104,7 +109,7 @@ export default function PortalShell({
         <div>
           <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
             <div>
-              <p className="eyebrow">{student.program} · {student.semester}</p>
+              <p className="eyebrow">{person?.sub ? person.sub.split("·")[0] : `${student.program} · ${student.semester}`}</p>
               <h1 className="h2 mt-1">{title}</h1>
               {subtitle ? <p className="muted mt-1 text-[13px]">{subtitle}</p> : null}
             </div>
@@ -145,6 +150,66 @@ export const studentNav: NavGroup[] = [
       { href: "/student/hostel", label: "Hostel", icon: "M3 20V9l9-5 9 5v11M9 20v-6h6v6" },
       { href: "/student/transport", label: "Transport", icon: "M5 17h14M6 17a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm12 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4ZM4 13V7h16v6" },
       { href: "/student/helpdesk", label: "Helpdesk", icon: "M12 18h.01M9 9a3 3 0 1 1 4.5 2.6c-.9.6-1.5 1.2-1.5 2.4" },
+    ],
+  },
+];
+
+
+export const parentNav: NavGroup[] = [
+  {
+    title: "My child",
+    items: [
+      { href: "/parent", label: "Dashboard", icon: "M4 13h6V4H4v9Zm10 7h6v-9h-6v9ZM4 20h6v-4H4v4Zm10-11h6V4h-6v5Z" },
+      { href: "/parent/attendance", label: "Attendance & approvals", icon: "m4 12 5 5L20 6", badge: "1" },
+      { href: "/parent/results", label: "Results & progress", icon: "M4 19V9m6 10V5m6 14v-7" },
+      { href: "/parent/fees", label: "Fees", icon: "M3 7h18v10H3zM3 11h18" },
+      { href: "/parent/transport", label: "Live bus", icon: "M5 17h14M6 17a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm12 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4ZM4 13V7h16v6" },
+    ],
+  },
+  {
+    title: "Connect",
+    items: [
+      { href: "/parent/messages", label: "Messages", icon: "M4 5h16v10H8l-4 4V5Z" },
+      { href: "/parent/ptm", label: "PTM booking", icon: "M4 6h16v14H4zM8 3v4M16 3v4M4 10h16" },
+    ],
+  },
+];
+
+export const facultyNav: NavGroup[] = [
+  {
+    title: "Teaching",
+    items: [
+      { href: "/faculty", label: "Dashboard", icon: "M4 13h6V4H4v9Zm10 7h6v-9h-6v9ZM4 20h6v-4H4v4Zm10-11h6V4h-6v5Z" },
+      { href: "/faculty/timetable", label: "My timetable", icon: "M4 6h16v14H4zM8 3v4M16 3v4M4 10h16" },
+      { href: "/faculty/attendance", label: "Attendance", icon: "m4 12 5 5L20 6", badge: "2" },
+      { href: "/faculty/courses", label: "Courses", icon: "M4 5h16v12H4zM8 21h8" },
+      { href: "/faculty/gradebook", label: "Gradebook", icon: "M4 4h16v16H4zM8 9h8M8 13h8M8 17h5" },
+    ],
+  },
+  {
+    title: "Mine",
+    items: [
+      { href: "/faculty/mentees", label: "Mentees", icon: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-8 8a8 8 0 0 1 16 0" },
+      { href: "/faculty/leave", label: "Leave", icon: "M6 3v18M18 3v18M6 8h12" },
+      { href: "/faculty/payslips", label: "Payslips", icon: "M8 3h8l4 4v14H4V3h4Z" },
+    ],
+  },
+];
+
+export const academicsNav: NavGroup[] = [
+  {
+    title: "Department",
+    items: [
+      { href: "/academics", label: "Dashboard", icon: "M4 13h6V4H4v9Zm10 7h6v-9h-6v9ZM4 20h6v-4H4v4Zm10-11h6V4h-6v5Z" },
+      { href: "/academics/allocation", label: "Subject allocation", icon: "M4 6h7v5H4zM13 6h7v5h-7zM4 13h7v5H4zM13 13h7v5h-7z" },
+      { href: "/academics/timetable", label: "Timetable builder", icon: "M4 6h16v14H4zM8 3v4M16 3v4M4 10h16" },
+    ],
+  },
+  {
+    title: "Approvals",
+    items: [
+      { href: "/academics/approvals", label: "Marks approval", icon: "m4 12 5 5L20 6", badge: "2" },
+      { href: "/academics/shortage", label: "Shortage list", icon: "M12 9v4m0 4h.01M4 20h16L12 4 4 20Z" },
     ],
   },
 ];
