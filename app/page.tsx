@@ -43,9 +43,8 @@ export default function HomePage() {
             </div>
             <h1 className="h1 mt-5 text-ink">
               Admissions, results and
-              <span className="relative mx-2 inline-block">
-                <span className="relative z-10 italic text-brand-700">student life</span>
-                <span className="absolute inset-x-0 bottom-1 z-0 h-3 rounded bg-accent-100" aria-hidden />
+              <span className="mx-2 inline-block italic text-brand-700 underline decoration-accent-400 decoration-[3px] underline-offset-[10px]">
+                student life
               </span>
               in one place.
             </h1>
