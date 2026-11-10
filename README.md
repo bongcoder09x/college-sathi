@@ -23,6 +23,20 @@ Two builds live in this repository:
 The static build differs in two ways: application pages use `?id=` query strings (`/apply/status/?id=CS-APP-1042`)
 instead of path segments, and mutations call `lib/clientStore.ts` instead of the API routes.
 
+## Backend (`backend/`)
+
+The API that this UI talks to in production lives in [`backend/`](./backend) — a NestJS skeleton with the
+`core/` layer (tenancy + RLS session vars, auth with OTP/SSO/2FA, iam guards, audit interceptor, files,
+notifications), 19 domain modules, a Socket.IO realtime gateway and the BullMQ worker registry. It runs in
+in-memory demo mode with one command and switches to Postgres + Redis via `.env`:
+
+```bash
+cd backend && npm install && npm run start:dev     # http://localhost:4000/api
+docker compose up -d && npm run db:apply           # postgres + redis + schema/RLS
+```
+
+See [`backend/README.md`](./backend/README.md) for the endpoint map and channel names.
+
 ## Stack
 
 - Next.js 14 (App Router) · React 18 · TypeScript
