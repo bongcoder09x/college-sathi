@@ -1,0 +1,1 @@
+self.__SSG_MANIFEST=new Set(["\u002Fcampuses\u002F[slug]","\u002Fprograms\u002F[slug]","\u002Fverify\u002F[certificateId]"]);self.__SSG_MANIFEST_CB&&self.__SSG_MANIFEST_CB()
