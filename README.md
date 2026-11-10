@@ -7,6 +7,22 @@ dashboard and a staff console.
 **Everything is demo.** There is no database, no payment gateway, no SMS or email provider. All data lives in
 server memory (`lib/store.ts`) and resets when the server restarts.
 
+## Live demo
+
+**https://bongcoder09x.github.io/college-sathi/** — the same UI, published as a static export on the
+`gh-pages` branch. On that build every page runs in the browser and the demo store is mirrored into
+`localStorage`, so applications you create survive a refresh (there is no server there).
+
+Two builds live in this repository:
+
+| Branch | What it is |
+| --- | --- |
+| `main` | The full Next.js app: server-rendered pages, route handlers in `app/api/*`, in-memory store |
+| `gh-pages` | The static export (`output: "export"`) that serves the live demo |
+
+The static build differs in two ways: application pages use `?id=` query strings (`/apply/status/?id=CS-APP-1042`)
+instead of path segments, and mutations call `lib/clientStore.ts` instead of the API routes.
+
 ## Stack
 
 - Next.js 14 (App Router) · React 18 · TypeScript
