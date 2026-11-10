@@ -1,160 +1,134 @@
-import type { Metadata } from "next";
+"use client";
+
 import Link from "next/link";
-import { notices, publishedResults } from "@/lib/data";
-import { studentProfile } from "@/lib/student";
-import { fmtDate } from "@/lib/utils";
+import PortalShell, { studentNav } from "@/components/PortalShell";
+import { attendance, attendancePercent, exams, fees, student, todayClasses } from "@/lib/portal";
+import { notices } from "@/lib/data";
+import { useSession } from "@/lib/session";
+import { fmtDate, inr } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "Student dashboard" };
+export default function StudentDashboard() {
+  const { session } = useSession();
+  const overall = attendancePercent(
+    attendance.reduce((s, a) => s + a.held, 0),
+    attendance.reduce((s, a) => s + a.attended, 0)
+  );
+  const shortage = attendance.filter((a) => attendancePercent(a.held, a.attended) < 75);
 
-const timetable = [
-  { time: "9:00 – 10:00", mon: "Machine Learning", tue: "Compiler Design", wed: "Information Security", thu: "Machine Learning", fri: "Elective: NLP" },
-  { time: "10:15 – 11:15", mon: "Compiler Design", tue: "Machine Learning", wed: "Capstone studio", thu: "Compiler Design", fri: "Information Security" },
-  { time: "11:30 – 12:30", mon: "Information Security", tue: "Capstone studio", wed: "Machine Learning", thu: "Elective: NLP", fri: "Capstone studio" },
-  { time: "2:00 – 4:00", mon: "Lab: Networks", tue: "Lab: ML", wed: "Library / mentor", thu: "Lab: Security", fri: "Sports" },
-];
-
-const fees = [
-  { head: "Semester 5 tuition", amount: 64000, status: "Paid", date: "2026-07-12" },
-  { head: "Hostel (Block B)", amount: 38000, status: "Paid", date: "2026-07-18" },
-  { head: "Examination fee", amount: 2400, status: "Due 25/11/2026", date: "" },
-];
-
-export default function StudentPage() {
-  const result = publishedResults["CS2201"];
   return (
-    <div className="shell py-10">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="eyebrow">Student dashboard · demo</p>
-          <h1 className="h2 mt-1">Hello, {studentProfile.name.split(" ")[0]}</h1>
-          <p className="muted mt-1 text-[13px]">
-            {studentProfile.rollNo} · {studentProfile.program} · {studentProfile.campus} · {studentProfile.semester}
+    <PortalShell
+      title={`Hello, ${student.name.split(" ")[0]}`}
+      subtitle={`${student.rollNo} · ${student.program} · ${student.campus} · ${student.semester}`}
+      groups={studentNav}
+      footer={
+        <div className="card mt-3 p-4">
+          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">Mentor</p>
+          <p className="mt-1 text-[12.5px] font-semibold text-ink">{student.mentor}</p>
+          <p className="text-[11px] text-slate-500">Tue & Thu · 2–4 PM</p>
+        </div>
+      }
+    >
+      {!session ? (
+        <div className="card mb-4 flex flex-wrap items-center justify-between gap-3 border-accent-500/40 p-4">
+          <p className="text-[12.5px] text-slate-600">
+            You are viewing the demo student. <strong className="text-ink">Sign in</strong> to see the role-aware
+            dashboard (student, parent, staff or admin).
           </p>
+          <Link href="/login" className="btn-primary btn-sm">Sign in</Link>
         </div>
-        <div className="flex gap-2">
-          <Link href="/results/lookup" className="btn-outline btn-sm">Result lookup</Link>
-          <Link href="/apply/CS-APP-1042/status" className="btn-ghost btn-sm">Admission tracker</Link>
-        </div>
-      </div>
+      ) : null}
 
-      <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {[
-          { label: "CGPA", value: studentProfile.cgpa, note: "out of 10 · semester 5" },
-          { label: "Attendance", value: `${studentProfile.attendance}%`, note: "minimum required 75%" },
-          { label: "Credits earned", value: String(studentProfile.creditsEarned), note: "of 160 for the degree" },
-          { label: "Fees due", value: "₹2,400", note: "examination fee, due 25 Nov" },
+          { label: "Attendance", value: `${overall}%`, note: shortage.length ? `${shortage.length} subject${shortage.length > 1 ? "s" : ""} below 75%` : "all subjects above 75%" },
+          { label: "CGPA", value: student.cgpa, note: `${student.creditsEarned}/${student.creditsTotal} credits earned` },
+          { label: "Fees due", value: inr(fees.due), note: "examination fee · due 25/11/2026" },
+          { label: "Upcoming exams", value: String(exams.length), note: "first paper on 08/12/2026" },
         ].map((k) => (
           <div key={k.label} className="kpi">
-            <p className="text-[10.5px] font-bold uppercase tracking-[0.14em] text-slate-400">{k.label}</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">{k.label}</p>
             <p className="mt-1 font-display text-2xl text-ink">{k.value}</p>
-            <p className="mt-0.5 text-[11.5px] text-slate-500">{k.note}</p>
+            <p className="mt-0.5 text-[11px] text-slate-500">{k.note}</p>
           </div>
         ))}
       </div>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_340px]">
-        <div className="space-y-6">
-          <div className="card overflow-hidden">
-            <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
-              <p className="font-display text-lg">This week's timetable</p>
-              <span className="text-[11.5px] text-slate-500">Semester 5 · Section A</span>
+      <div className="mt-5 grid gap-5 xl:grid-cols-[1.4fr_1fr]">
+        <div className="space-y-5">
+          <div className="card p-5">
+            <div className="flex items-center justify-between">
+              <p className="font-display text-lg">Today's classes</p>
+              <Link href="/student/timetable" className="text-[11.5px] font-semibold text-brand-700 hover:underline">Full timetable</Link>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[640px] text-left text-[12px]">
-                <thead className="bg-slate-50 text-[10.5px] uppercase tracking-wide text-slate-500">
-                  <tr>
-                    <th className="px-4 py-2.5">Time</th>
-                    <th className="px-3 py-2.5">Mon</th>
-                    <th className="px-3 py-2.5">Tue</th>
-                    <th className="px-3 py-2.5">Wed</th>
-                    <th className="px-3 py-2.5">Thu</th>
-                    <th className="px-3 py-2.5">Fri</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {timetable.map((row) => (
-                    <tr key={row.time}>
-                      <td className="px-4 py-2.5 font-medium text-slate-500">{row.time}</td>
-                      <td className="px-3 py-2.5">{row.mon}</td>
-                      <td className="px-3 py-2.5">{row.tue}</td>
-                      <td className="px-3 py-2.5">{row.wed}</td>
-                      <td className="px-3 py-2.5">{row.thu}</td>
-                      <td className="px-3 py-2.5">{row.fri}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <ul className="mt-3 space-y-2">
+              {todayClasses.map((c) => (
+                <li key={c.time} className="flex items-center gap-3 rounded-xl border border-beige/70 bg-ivory/50 p-3">
+                  <span className="w-12 shrink-0 text-[11.5px] font-semibold text-slate-500">{c.time}</span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[13px] font-semibold text-ink">{c.subject}</p>
+                    <p className="truncate text-[11px] text-slate-500">{c.room} · {c.faculty}</p>
+                  </div>
+                  <span className={c.status === "live" ? "badge-green" : c.status === "done" ? "badge-slate" : "badge-amber"}>
+                    {c.status === "live" ? "live now" : c.status === "done" ? "done" : "next"}
+                  </span>
+                </li>
+              ))}
+            </ul>
           </div>
 
           <div className="card p-5">
             <div className="flex items-center justify-between">
-              <p className="font-display text-lg">Latest result · {result.semester}</p>
-              <span className="badge-green">SGPA {result.sgpa}</span>
+              <p className="font-display text-lg">Attendance watch</p>
+              <Link href="/student/attendance" className="text-[11.5px] font-semibold text-brand-700 hover:underline">Details</Link>
             </div>
-            <div className="mt-3 grid gap-2 sm:grid-cols-2">
-              {result.papers.map((p: any) => (
-                <div key={p.code} className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2">
-                  <div>
-                    <p className="text-[12px] font-semibold text-ink">{p.title}</p>
-                    <p className="text-[10.5px] text-slate-500">{p.code} · {p.credits} credits</p>
+            <div className="mt-3 space-y-2.5">
+              {attendance.slice(0, 4).map((a) => {
+                const p = attendancePercent(a.held, a.attended);
+                return (
+                  <div key={a.code}>
+                    <div className="flex items-baseline justify-between text-[12px]">
+                      <span className="font-medium text-ink">{a.subject}</span>
+                      <span className={p < 75 ? "font-semibold text-brand-700" : "text-slate-500"}>{p}%</span>
+                    </div>
+                    <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-beige/70">
+                      <div className={`h-full rounded-full ${p < 75 ? "bg-brand-600" : "bg-accent-500"}`} style={{ width: `${p}%` }} />
+                    </div>
                   </div>
-                  <span className="badge-green">{p.grade}</span>
-                </div>
-              ))}
+                );
+              })}
             </div>
-            <Link href="/results/lookup" className="btn-outline btn-sm mt-4">Open marksheet</Link>
-          </div>
-
-          <div className="card overflow-hidden">
-            <div className="border-b border-slate-200 px-5 py-4">
-              <p className="font-display text-lg">Fees & payments</p>
-            </div>
-            <table className="w-full text-left text-[12.5px]">
-              <thead className="bg-slate-50 text-[10.5px] uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th className="px-5 py-2.5">Head</th>
-                  <th className="px-3 py-2.5">Amount</th>
-                  <th className="px-3 py-2.5">Status</th>
-                  <th className="px-5 py-2.5 text-right">Date</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {fees.map((f) => (
-                  <tr key={f.head}>
-                    <td className="px-5 py-2.5 font-medium text-ink">{f.head}</td>
-                    <td className="px-3 py-2.5">₹{f.amount.toLocaleString("en-IN")}</td>
-                    <td className="px-3 py-2.5">
-                      <span className={f.status === "Paid" ? "badge-green" : "badge-amber"}>{f.status}</span>
-                    </td>
-                    <td className="px-5 py-2.5 text-right text-slate-500">{f.date ? fmtDate(f.date) : "—"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            {shortage.length ? (
+              <p className="mt-3 rounded-xl bg-brand-50 px-3 py-2 text-[11.5px] text-brand-800">
+                Shortage in {shortage.map((s) => s.subject).join(", ")} — file a condonation request before the exam form closes.
+              </p>
+            ) : null}
           </div>
         </div>
 
-        <aside className="space-y-4">
+        <div className="space-y-5">
           <div className="card p-5">
-            <p className="font-display text-lg">Quick actions</p>
-            <div className="mt-3 space-y-2">
-              {[
-                { label: "Download hall ticket", href: "/apply/CS-APP-1042/hall-ticket" },
-                { label: "Fee receipt", href: "/apply/CS-APP-1042/receipt" },
-                { label: "Certificate verification", href: "/verify" },
-                { label: "Ask the mentor", href: "/contact" },
-              ].map((x) => (
-                <Link key={x.label} href={x.href} className="flex items-center justify-between rounded-xl border border-slate-200 px-3.5 py-2.5 text-[12.5px] font-medium text-slate-700 hover:border-brand-400 hover:text-brand-700">
-                  {x.label}
-                  <span>→</span>
-                </Link>
-              ))}
+            <div className="flex items-center justify-between">
+              <p className="font-display text-lg">Fee status</p>
+              <Link href="/student/fees" className="text-[11.5px] font-semibold text-brand-700 hover:underline">Ledger</Link>
             </div>
+            <p className="mt-2 font-display text-2xl text-ink">{inr(fees.due)}</p>
+            <p className="text-[11.5px] text-slate-500">due on 25/11/2026 · examination fee</p>
+            <Link href="/student/fees" className="btn-primary btn-sm mt-3 w-full">Pay now</Link>
+            <ul className="mt-3 space-y-1.5 border-t border-beige pt-3">
+              {fees.ledger.slice(0, 3).map((l) => (
+                <li key={l.head} className="flex items-center justify-between text-[11.5px]">
+                  <span className="truncate text-slate-600">{l.head}</span>
+                  <span className="badge-green shrink-0">{l.status}</span>
+                </li>
+              ))}
+            </ul>
           </div>
 
           <div className="card p-5">
-            <p className="font-display text-lg">Notices for you</p>
+            <div className="flex items-center justify-between">
+              <p className="font-display text-lg">Notices</p>
+              <Link href="/notices" className="text-[11.5px] font-semibold text-brand-700 hover:underline">All</Link>
+            </div>
             <ul className="mt-3 space-y-2.5">
               {notices.slice(0, 4).map((n) => (
                 <li key={n.id}>
@@ -167,13 +141,15 @@ export default function StudentPage() {
             </ul>
           </div>
 
-          <div className="card bg-sand p-5">
-            <p className="text-[12.5px] font-semibold text-ink">Mentor</p>
-            <p className="mt-1 text-[12px] text-slate-600">{studentProfile.mentor}</p>
-            <p className="text-[11.5px] text-slate-500">Office hours: Tue & Thu, 2–4 PM</p>
+          <div className="card bg-brand-900 p-5 text-white">
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-accent-400">Next exam</p>
+            <p className="mt-1 font-display text-xl">{exams[0].subject}</p>
+            <p className="text-[11.5px] text-brand-100">{fmtDate(exams[0].date)} · {exams[0].time}</p>
+            <p className="text-[11.5px] text-brand-100">{exams[0].room} · seat {exams[0].seat}</p>
+            <Link href="/student/exams" className="btn-accent btn-sm mt-3">Hall ticket & schedule</Link>
           </div>
-        </aside>
+        </div>
       </div>
-    </div>
+    </PortalShell>
   );
 }

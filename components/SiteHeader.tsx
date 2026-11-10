@@ -56,6 +56,12 @@ export default function SiteHeader({ tenant }: { tenant: Tenant }) {
             >
               Student
             </Link>
+            <Link
+              href="/login"
+              className="hidden rounded-full px-3 py-2 text-[13px] font-semibold text-slate-600 transition hover:text-brand-700 sm:block"
+            >
+              Sign in
+            </Link>
             <Link href="/apply" className="btn-primary btn-sm">
               Apply now
             </Link>
